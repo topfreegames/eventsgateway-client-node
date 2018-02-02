@@ -1,0 +1,6 @@
+{
+  "grpc": {
+    "serveraddress": "localhost:9999"
+  },
+  "kafkatopic": "default-topic"
+}

@@ -1,0 +1,6 @@
+{
+  "grpc": {
+    "serveraddress": "EVENTS_GATEWAY_GRPC_SERVER_ADDRESS"
+  },
+  "kafkatopic": "EVENTS_GATEWAY_KAFKA_TOPIC"
+}
