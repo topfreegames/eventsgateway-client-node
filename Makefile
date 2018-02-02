@@ -5,4 +5,4 @@ setup:
 	@npm install
 
 test:
-	@npm test
+	@NODE_ENV=test LOG_LEVEL=fatal npm test
