@@ -9,7 +9,7 @@ const metrics = require('./lib/metrics')
 
 // protoPath must be absolute
 const protoPath = path.resolve(__dirname, './protos/eventsgateway/grpc/protobuf/events.proto')
-const eventsProto = grpc.load(protoPath).eventforwarder
+const eventsProto = grpc.load(protoPath).eventsgateway
 
 class Client {
   constructor(config, topic) {
