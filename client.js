@@ -45,7 +45,7 @@ class Client {
       event: name,
     })
     l.debug('sending event')
-    const method = 'sendEvent'
+    const method = '/eventsgateway.GRPCForwarder/SendEvent'
     const startTime = Date.now()
     // currently there are no interceptors in node-grpc
     // the proposal was already accepted
