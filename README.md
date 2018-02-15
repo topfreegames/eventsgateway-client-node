@@ -26,14 +26,61 @@ const config = {
 // initialize the client
 const eventsgatewayclient = new EventsGatewayClient(config)
 
+// send event to configured topic
+// calls should be wrapped in a try/catch
+try {
+  yield this.app.eventsGatewayClient.send(
+    'pingEvent',
+    {
+      status: `${123}`,     // all values must be sent as strings
+      msg: 'my string msg',
+    }
+  )
+} catch (err) {
+  // no need to log here, eventsGateway already logs failures
+}
+
+// send event to custom topic
+try {
+  yield this.app.eventsGatewayClient.sendToTopic(
+    'pingEvent',
+	'my-topic'
+    {
+      status: `${123}`,
+      msg: 'my string msg',
+    }
+  )
+} catch (err) {}
+```
+
+### Metrics
+
+### Datadog StatsD
+
+```javascript
+// include statds information for sending metrics
+const config = {
+  "grpc": {
+    "serveraddress": "localhost:9999"
+  },
+  "kafkatopic": "default-topic",
+  "statsd": {
+    "host": "127.0.0.1",
+    "port": 8125,
+    "globalTags": ['game:my-game', `host:127.0.0.1`],
+  }
+}
+
+```
+
+Response time metrics including error codes will be sent to the given host and port.
+
+### Prometheus
+
+Response time, success and error counters are exposed in a koa app.
+```javascript
 // Prometheus metrics endpoint
 // available at localhost:$EVENTSGATEWAY_PROMETHEUS_PORT
 // defaults to localhost:9090
-eventsgatewayclient.metrics.listen() // blocking!
-
-// send event to configured topic
-yield eventsgatewayclient.send('MyEvent1', { prop1: 'val1' })
-
-// send event to custom topic
-yield eventsgatewayclient.sendToTopic('MyEvent1', 'my-topic', { prop1: 'val1' })
+eventsgatewayclient.metrics.prometheus.listen() // blocking!
 ```

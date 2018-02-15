@@ -40,6 +40,8 @@ describe('Client', () => {
       expect(client.grpcClient).not.to.equal(undefined)
       expect(client.logger).not.to.equal(undefined)
       expect(client.metrics).not.to.equal(undefined)
+      expect(client.metrics.prometheus).not.to.equal(undefined)
+      expect(client.metrics.statsd).not.to.equal(undefined)
     })
 
     it('returns client with provided config and topic', () => {
@@ -50,6 +52,8 @@ describe('Client', () => {
       expect(client.grpcClient).not.to.equal(undefined)
       expect(client.logger).not.to.equal(undefined)
       expect(client.metrics).not.to.equal(undefined)
+      expect(client.metrics.prometheus).not.to.equal(undefined)
+      expect(client.metrics.statsd).not.to.equal(undefined)
     })
 
     it('throws exception if no kafka topic', () => {
@@ -168,6 +172,8 @@ describe('Client', () => {
   })
 
   describe('Metrics', () => {
+    // TODO: test statsd metrics
+
     let client
     let sendEventStub
     let name
@@ -184,7 +190,7 @@ describe('Client', () => {
         prop2: 'val2',
       }
       prometheusclient.register.resetMetrics()
-      metricsServer = client.metrics.listen()
+      metricsServer = client.metrics.prometheus.listen()
       request = sap.agent(metricsServer)
     })
 
@@ -207,7 +213,7 @@ describe('Client', () => {
         parsePrometheusResponse(metricsRes.text).filter(r => r.tags.topic === client.topic)
       parsedRes.forEach((r) => {
         expect(r.tags.clientHost).to.equal(os.hostname())
-        expect(r.tags.route).to.equal('sendEvent')
+        expect(r.tags.route).to.equal('/eventsgateway.GRPCForwarder/SendEvent')
         expect(r.tags.topic).to.equal(client.topic)
       })
       const resTime = parsedRes.filter(r => r.metric === 'eventsgateway_client_response_time_ms')
@@ -240,7 +246,7 @@ describe('Client', () => {
         expect(resTime).to.have.length(3) // num percentiles
         parsedRes.forEach((r) => {
           expect(r.tags.clientHost).to.equal(os.hostname())
-          expect(r.tags.route).to.equal('sendEvent')
+          expect(r.tags.route).to.equal('/eventsgateway.GRPCForwarder/SendEvent')
           expect(r.tags.topic).to.equal(client.topic)
         })
         const resFailure = parsedRes.filter(r => r.metric ===

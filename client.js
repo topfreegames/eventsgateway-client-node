@@ -2,10 +2,12 @@ const grpc = require('grpc')
 const os = require('os')
 const path = require('path')
 const uuid = require('uuid/v4')
+
 const defaultConfig = require('./config/default.json')
 
 const logger = require('./lib/logger')
-const metrics = require('./lib/metrics')
+const metricsPrometheus = require('./lib/metricsPrometheus')
+const MetricsStatsd = require('./lib/metricsStatsd')
 
 // protoPath must be absolute
 const protoPath = path.resolve(__dirname, './protos/eventsgateway/grpc/protobuf/events.proto')
@@ -30,7 +32,44 @@ class Client {
       topic: this.topic,
       serverAddr: address,
     })
-    this.metrics = metrics
+
+    this.metrics = {
+      statsd: new MetricsStatsd(this.config.statsd),
+      prometheus: metricsPrometheus,
+    }
+  }
+
+  reportResponseTime(method, topic, timeUsed, err) {
+    this.metrics.prometheus.clientRequestsResponseTime.labels(
+      this.hostname,
+      method,
+      topic
+    ).observe(timeUsed)
+    this.metrics.statsd.report(
+      'eventsgateway.response_time_ms',
+      topic,
+      method,
+      timeUsed,
+      err
+    )
+  }
+
+  reportFailure(method, topic, err) {
+    const e = err.toString()
+    this.metrics.prometheus.clientRequestsFailureCounter.labels(
+      this.hostname,
+      method,
+      topic,
+      e
+    ).inc()
+  }
+
+  reportSuccess(method, topic) {
+    this.metrics.prometheus.clientRequestsSuccessCounter.labels(
+      this.hostname,
+      method,
+      topic
+    ).inc()
   }
 
   * sendToTopic(name, topic, props) {
@@ -40,11 +79,6 @@ class Client {
     if (!topic) {
       throw Error('topic cannot be empty')
     }
-    const l = this.logger.child({
-      operation: 'sendToTopic',
-      event: name,
-    })
-    l.debug('sending event')
     const method = '/eventsgateway.GRPCForwarder/SendEvent'
     const startTime = Date.now()
     // currently there are no interceptors in node-grpc
@@ -59,18 +93,24 @@ class Client {
       props,
       timestamp: Date.now(),
     }
+    const l = this.logger.child({
+      operation: 'sendToTopic',
+      event: name,
+      args,
+      method,
+    })
+    l.debug('sending event')
     return yield new Promise((resolve, reject) => {
       this.grpcClient.sendEvent(args, (err, res) => {
         const timeUsed = Date.now() - startTime
-        metrics.clientRequestsResponseTime.labels(this.hostname, method, topic).observe(timeUsed)
+        this.reportResponseTime(method, topic, timeUsed, err)
         l.child({ timeUsed, reply: res }).debug('request processed')
         if (err) {
-          const e = err.toString()
-          metrics.clientRequestsFailureCounter.labels(this.hostname, method, topic, e).inc()
+          this.reportFailure(method, topic, err)
           l.child({ timeUsed, err }).error('error processing request')
           return reject(err)
         }
-        metrics.clientRequestsSuccessCounter.labels(this.hostname, method, topic).inc()
+        this.reportSuccess(method, topic)
         return resolve(res)
       })
     })
