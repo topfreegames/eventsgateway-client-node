@@ -10,9 +10,9 @@ const {
 } = require('mocha')
 require('co-mocha')
 
-const configDefault = require('./../../config/default.json')
-const configTest = require('./../../config/test.json')
-const Client = require('./../../client')
+const configDefault = require('./../../src/config/default.json')
+const configTest = require('./../../src/config/test.json')
+const Client = require('./../../src/client')
 
 const parsePrometheusResponse = (text) => {
   const messages = text.split(/\r?\n/)
