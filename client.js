@@ -34,7 +34,7 @@ class Client {
     })
 
     this.metrics = {
-      statsd: new MetricsStatsd(this.config.statsd),
+      statsd: new MetricsStatsd(this.config.statsd || {}),
       prometheus: metricsPrometheus,
     }
   }
