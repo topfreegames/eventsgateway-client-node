@@ -1,11 +1,11 @@
-const grpc = require('grpc')
+require('babel-polyfill')
 const uuid = require('uuid/v4')
 const defaultConfig = require('./config/default.json')
 const logger = require('./lib/logger')
 const producer = require('./producer')
 
 class Client {
-  constructor(config, topic) {
+  constructor (config, topic) {
     this.config = config || defaultConfig
     this.topic = topic || this.config.kafkatopic
     if (!this.topic) {
@@ -15,10 +15,11 @@ class Client {
       source: 'eventsgateway/client',
       topic: this.topic,
     })
-    this.producer = new producer.Sync(this.config, topic)
+    const pClass = this.config.producer.async ? producer.Async : producer.Sync
+    this.producer = new pClass(this.config, this.logger)
   }
 
-  sendToTopic(name, topic, props) {
+  sendToTopic (name, topic, props) {
     if (!name) {
       throw Error('event name cannot be empty')
     }
@@ -45,8 +46,12 @@ class Client {
     return this.producer.send(event, l)
   }
 
-  send(name, props) {
+  send (name, props) {
     return this.sendToTopic(name, this.topic, props)
+  }
+
+  gracefulStop () {
+    return this.producer.gracefulStop()
   }
 }
 

@@ -32,6 +32,13 @@ class MetricsReporter {
       topic
     ).inc()
   }
+
+  reportDropped(topic) {
+    this.prometheus.clientRequestsDroppedCounter.labels(
+      this.hostname,
+      topic
+    ).inc()
+  }
 }
 
 module.exports = MetricsReporter

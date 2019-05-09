@@ -10,27 +10,10 @@ const {
 } = require('mocha')
 require('co-mocha')
 
+const helpers = require('./helpers')
 const configDefault = require('./../../src/config/default.json')
 const configTest = require('./../../src/config/test.json')
 const Client = require('./../../src/client')
-
-const parsePrometheusResponse = (text) => {
-  const messages = text.split(/\r?\n/)
-  return messages.map((m) => {
-    if (m.startsWith('#') || m.length === 0) {
-      return null
-    }
-    const re = /(.*){(.*)}\s(\d)/
-    const matches = re.exec(m)
-    const tags = {}
-    matches[2].split(',').forEach((t) => {
-      tags[t.split('=')[0]] = JSON.parse(t.split('=')[1])
-    })
-    return { metric: matches[1], tags, val: parseInt(matches[3], 10) }
-  }).filter(m => !!m)
-}
-
-console.log('errhod')
 
 describe('Client', () => {
   describe('Constructor', () => {
@@ -207,15 +190,15 @@ describe('Client', () => {
       expect(metricsRes.status).to.equal(200)
       expect(metricsRes.headers['content-type']).to.equal(prometheusclient.contentType)
       expect(metricsRes.text).not.to.have.length(0)
-      const parsedRes =
-        parsePrometheusResponse(metricsRes.text).filter(r => r.tags.topic === client.topic)
+      const parsedRes = helpers.parsePrometheusResponse(metricsRes.text)
+        .filter(r => r.tags.topic === client.topic)
       parsedRes.forEach((r) => {
         expect(r.tags.clientHost).to.equal(os.hostname())
         expect(r.tags.route).to.equal('/eventsgateway.GRPCForwarder/SendEvent')
         expect(r.tags.topic).to.equal(client.topic)
       })
-      const resTime = parsedRes.filter(r => r.metric === 'eventsgateway_client_response_time_ms')
-      expect(resTime).to.have.length(3) // num percentiles
+      const resTime = parsedRes.filter(r => r.metric === 'eventsgateway_client_response_time_ms_bucket')
+      expect(resTime).to.have.length(8) // num buckets and +Inf
       const resSuccess = parsedRes.filter(r => r.metric ===
                                           'eventsgateway_client_requests_success_counter')
       expect(resSuccess).to.have.length(1) // num requests
@@ -238,10 +221,10 @@ describe('Client', () => {
         expect(metricsRes.status).to.equal(200)
         expect(metricsRes.headers['content-type']).to.equal(prometheusclient.contentType)
         expect(metricsRes.text).not.to.have.length(0)
-        const parsedRes =
-          parsePrometheusResponse(metricsRes.text).filter(r => r.tags.topic === client.topic)
-        const resTime = parsedRes.filter(r => r.metric === 'eventsgateway_client_response_time_ms')
-        expect(resTime).to.have.length(3) // num percentiles
+        const parsedRes = helpers.parsePrometheusResponse(metricsRes.text)
+          .filter(r => r.tags.topic === client.topic)
+        const resTime = parsedRes.filter(r => r.metric === 'eventsgateway_client_response_time_ms_bucket')
+        expect(resTime).to.have.length(8) // num buckets and +Inf
         parsedRes.forEach((r) => {
           expect(r.tags.clientHost).to.equal(os.hostname())
           expect(r.tags.route).to.equal('/eventsgateway.GRPCForwarder/SendEvent')
