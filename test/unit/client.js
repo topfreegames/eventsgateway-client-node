@@ -30,30 +30,30 @@ const parsePrometheusResponse = (text) => {
   }).filter(m => !!m)
 }
 
+console.log('errhod')
+
 describe('Client', () => {
   describe('Constructor', () => {
     it('returns client if no error and default config and topic', () => {
       const client = new Client()
       expect(client.config).to.equal(configDefault)
       expect(client.topic).to.equal(configDefault.kafkatopic)
-      expect(client.hostname).to.equal(os.hostname())
-      expect(client.grpcClient).not.to.equal(undefined)
+      expect(client.producer).not.to.equal(undefined)
       expect(client.logger).not.to.equal(undefined)
-      expect(client.metrics).not.to.equal(undefined)
-      expect(client.metrics.prometheus).not.to.equal(undefined)
-      expect(client.metrics.statsd).not.to.equal(undefined)
+      expect(client.producer.metrics).not.to.equal(undefined)
+      expect(client.producer.metrics.hostname).to.equal(os.hostname())
+      expect(client.producer.metrics.prometheus).not.to.equal(undefined)
     })
 
     it('returns client with provided config and topic', () => {
       const client = new Client(configTest, 'my-topic')
       expect(client.config).to.equal(configTest)
       expect(client.topic).to.equal('my-topic')
-      expect(client.hostname).to.equal(os.hostname())
-      expect(client.grpcClient).not.to.equal(undefined)
+      expect(client.producer).not.to.equal(undefined)
       expect(client.logger).not.to.equal(undefined)
-      expect(client.metrics).not.to.equal(undefined)
-      expect(client.metrics.prometheus).not.to.equal(undefined)
-      expect(client.metrics.statsd).not.to.equal(undefined)
+      expect(client.producer.metrics).not.to.equal(undefined)
+      expect(client.producer.metrics.hostname).to.equal(os.hostname())
+      expect(client.producer.metrics.prometheus).not.to.equal(undefined)
     })
 
     it('throws exception if no kafka topic', () => {
@@ -82,7 +82,7 @@ describe('Client', () => {
 
     beforeEach(() => {
       client = new Client()
-      sendEventStub = sinon.stub(client.grpcClient, 'sendEvent')
+      sendEventStub = sinon.stub(client.producer.grpcClient, 'sendEvent')
       name = 'EventName'
       props = {
         prop1: 'val1',
@@ -92,7 +92,7 @@ describe('Client', () => {
     })
 
     afterEach(() => {
-      client.grpcClient.sendEvent.restore()
+      client.producer.grpcClient.sendEvent.restore()
     })
 
     it('sends event to specific topic', function* () {
@@ -131,7 +131,7 @@ describe('Client', () => {
 
     beforeEach(() => {
       client = new Client()
-      sendEventStub = sinon.stub(client.grpcClient, 'sendEvent')
+      sendEventStub = sinon.stub(client.producer.grpcClient, 'sendEvent')
       name = 'EventName'
       props = {
         prop1: 'val1',
@@ -140,7 +140,7 @@ describe('Client', () => {
     })
 
     afterEach(() => {
-      client.grpcClient.sendEvent.restore()
+      client.producer.grpcClient.sendEvent.restore()
     })
 
     it('sends event to configured topic', function* () {
@@ -172,8 +172,6 @@ describe('Client', () => {
   })
 
   describe('Metrics', () => {
-    // TODO: test statsd metrics
-
     let client
     let sendEventStub
     let name
@@ -183,19 +181,19 @@ describe('Client', () => {
 
     beforeEach(() => {
       client = new Client(undefined, uuid())
-      sendEventStub = sinon.stub(client.grpcClient, 'sendEvent')
+      sendEventStub = sinon.stub(client.producer.grpcClient, 'sendEvent')
       name = 'EventName'
       props = {
         prop1: 'val1',
         prop2: 'val2',
       }
       prometheusclient.register.resetMetrics()
-      metricsServer = client.metrics.prometheus.listen()
+      metricsServer = client.producer.metrics.prometheus.listen()
       request = sap.agent(metricsServer)
     })
 
     afterEach(() => {
-      client.grpcClient.sendEvent.restore()
+      client.producer.grpcClient.sendEvent.restore()
       metricsServer.close()
     })
 
