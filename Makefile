@@ -6,3 +6,6 @@ setup:
 
 test:
 	@NODE_ENV=test LOG_LEVEL=fatal npm test
+
+build:
+	@npx rollup -c
