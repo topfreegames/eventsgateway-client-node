@@ -223,7 +223,7 @@ describe('Async Producer', () => {
         configTest.producer.waitIntervalMs = 6
         rebuildClient(configTest)
         sendEventsStub.onCall(0).callsArgWith(1, null, {})
-        gracefulStopStub = sinon.stub(client.producer, 'gracefulStop')
+        gracefulStopStub = sinon.stub(client.producer.wg, 'wait')
         gracefulStopStub.callThrough()
         client.sendToTopic(name, topic, props)
         await helpers.sleep(5)

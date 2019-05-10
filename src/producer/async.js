@@ -1,6 +1,7 @@
 const grpc = require('grpc')
 const path = require('path')
 const uuid = require('uuid/v4')
+const WaitGroup = require('./waitGroup')
 const MetricsReporter = require('./../lib/metricsReporter')
 const util = require('./../lib/util')
 const protoPath = path.resolve(__dirname, './protos/eventsgateway/grpc/protobuf/events.proto')
@@ -23,14 +24,14 @@ class Async {
     this.batchSize = util.getValue(this.config.producer, 'batchSize', 10)
     this.maxRetries = util.getValue(this.config.producer, 'maxRetries', 3)
     this.retryIntervalMs = util.getValue(this.config.producer, 'retryIntervalMs', 1000)
-    this.waitIntervalMs = util.getValue(this.config.producer, 'waitIntervalMs', 1000)
     this.batch = []
     this.currentSendEventsRef = null
-    this.waitCount = 0
+    const waitIntervalMs = util.getValue(this.config.producer, 'waitIntervalMs', 1000)
+    this.wg = new WaitGroup(this.logger, waitIntervalMs)
   }
 
   send (event) {
-    this.waitCount++
+    this.wg.add(1)
     this.batch = this.batch.concat(event)
     if (this.batch.length >= this.batchSize) {
       clearTimeout(this.currentSendEventsRef)
@@ -52,22 +53,13 @@ class Async {
       retry: 0,
       events
     }
-    this.waitCount++ // wait on this batch
-    this.waitCount -= req.events.length // stop waiting on it's individual events
+    this.wg.add(1) // wait on this batch
+    this.wg.done(req.events.length) // stop waiting on it's individual events
     this.__sendEvents(req, 0)
   }
 
-  async gracefulStop () {
-    if (this.waitCount === 0) {
-      return
-    }
-    this.logger.info(`waiting on ${this.waitCount} events`)
-    await new Promise(resolve => {
-      setTimeout(async () => {
-        await this.gracefulStop()
-        resolve()
-      }, this.waitIntervalMs)
-    })
+  gracefulStop () {
+    return this.wg.wait()
   }
 
   __sendEvents (req) {
@@ -80,7 +72,7 @@ class Async {
     if (req.retry > this.maxRetries) {
       l.info('dropped events due to max retries')
       req.events.forEach(event => this.metrics.reportDropped(event.topic))
-      this.waitCount--
+      this.wg.done(1)
       return
     }
     const startTime = Date.now()
@@ -117,7 +109,7 @@ class Async {
         this.__sendEventsWithRetryDelay(reqCpy)
         return
       }
-      this.waitCount--
+      this.wg.done(1)
     })
   }
 
