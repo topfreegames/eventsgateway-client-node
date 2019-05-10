@@ -19,25 +19,25 @@ const clientRequestsResponseTime = new client.Histogram({
   name: 'eventsgateway_client_response_time_ms',
   help: 'the response time in ms of calls to server',
   buckets: [1, 5, 10, 30, 90, 160, 240],
-  labelNames: ['clientHost', 'route', 'topic'],
+  labelNames: ['route', 'topic'],
 })
 
 const clientRequestsSuccessCounter = new client.Counter({
   name: 'eventsgateway_client_requests_success_counter',
   help: 'the count of successfull client requests to the server',
-  labelNames: ['clientHost', 'route', 'topic'],
+  labelNames: ['route', 'topic'],
 })
 
 const clientRequestsFailureCounter = new client.Counter({
   name: 'eventsgateway_client_requests_failure_counter',
   help: 'the count of failed client requests to the server',
-  labelNames: ['clientHost', 'route', 'topic', 'reason'],
+  labelNames: ['route', 'topic', 'reason'],
 })
 
 const clientRequestsDroppedCounter = new client.Counter({
   name: 'eventsgateway_client_requests_dropped_counter',
   help: 'the count of dropped client requests to the server',
-  labelNames: ['clientHost', 'topic'],
+  labelNames: ['topic'],
 })
 
 // Catch all uncaught errors

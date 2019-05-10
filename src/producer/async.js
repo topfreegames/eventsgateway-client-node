@@ -94,11 +94,13 @@ class Async {
       if (res && res.failureIndexes && Array.isArray(res.failureIndexes)) {
         failureIndexes = res.failureIndexes
       }
-      let fc = 0
+      const failed = failureIndexes.reduce((acc, idx) => {
+        acc[idx] = true
+        return acc
+      }, {})
       req.events.forEach((event, i) => {
-        if (failureIndexes.length > fc && i === failureIndexes[fc]) {
+        if (failed[i]) {
           this.metrics.reportFailure(this.method, event.topic, "couldn't produce event")
-          fc++
           return
         }
         this.metrics.reportSuccess(this.method, event.topic)

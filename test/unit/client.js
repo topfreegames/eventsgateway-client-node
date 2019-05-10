@@ -1,5 +1,4 @@
 /* eslint-disable import/no-extraneous-dependencies */
-const os = require('os')
 const prometheusclient = require('prom-client')
 const sap = require('supertest-as-promised')
 const sinon = require('sinon')
@@ -23,7 +22,6 @@ describe('Client', () => {
       expect(client.producer).not.to.equal(undefined)
       expect(client.logger).not.to.equal(undefined)
       expect(client.producer.metrics).not.to.equal(undefined)
-      expect(client.producer.metrics.hostname).to.equal(os.hostname())
       expect(client.producer.metrics.prometheus).not.to.equal(undefined)
     })
 
@@ -36,7 +34,6 @@ describe('Client', () => {
       expect(client.producer).not.to.equal(undefined)
       expect(client.logger).not.to.equal(undefined)
       expect(client.producer.metrics).not.to.equal(undefined)
-      expect(client.producer.metrics.hostname).to.equal(os.hostname())
       expect(client.producer.metrics.prometheus).not.to.equal(undefined)
     })
 
@@ -194,7 +191,6 @@ describe('Client', () => {
       const parsedRes = helpers.parsePrometheusResponse(metricsRes.text)
         .filter(r => r.tags.topic === client.topic)
       parsedRes.forEach((r) => {
-        expect(r.tags.clientHost).to.equal(os.hostname())
         expect(r.tags.route).to.equal('/eventsgateway.GRPCForwarder/SendEvent')
         expect(r.tags.topic).to.equal(client.topic)
       })
@@ -227,7 +223,6 @@ describe('Client', () => {
         const resTime = parsedRes.filter(r => r.metric === 'eventsgateway_client_response_time_ms_bucket')
         expect(resTime).to.have.length(8) // num buckets and +Inf
         parsedRes.forEach((r) => {
-          expect(r.tags.clientHost).to.equal(os.hostname())
           expect(r.tags.route).to.equal('/eventsgateway.GRPCForwarder/SendEvent')
           expect(r.tags.topic).to.equal(client.topic)
         })

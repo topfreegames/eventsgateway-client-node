@@ -1,5 +1,4 @@
 /* eslint-disable import/no-extraneous-dependencies */
-const os = require('os')
 const prometheusclient = require('prom-client')
 const sap = require('supertest-as-promised')
 const sinon = require('sinon')
@@ -36,7 +35,6 @@ describe('Async Producer', () => {
       expect(client.producer).to.be.an.instanceof(producer.Sync)
       expect(client.logger).not.to.equal(undefined)
       expect(client.producer.metrics).not.to.equal(undefined)
-      expect(client.producer.metrics.hostname).to.equal(os.hostname())
       expect(client.producer.metrics.prometheus).not.to.equal(undefined)
     })
 
@@ -49,7 +47,6 @@ describe('Async Producer', () => {
       expect(client.producer).to.be.an.instanceof(producer.Async)
       expect(client.logger).not.to.equal(undefined)
       expect(client.producer.metrics).not.to.equal(undefined)
-      expect(client.producer.metrics.hostname).to.equal(os.hostname())
       expect(client.producer.metrics.prometheus).not.to.equal(undefined)
     })
   })
@@ -120,7 +117,6 @@ describe('Async Producer', () => {
         if (r.metric === 'eventsgateway_client_requests_failure_counter') {
           counterFailureShow++
           expect(r.val).to.equal(1)
-          expect(r.tags.clientHost).to.equal(os.hostname())
           expect(r.tags.route).to.equal('/eventsgateway.GRPCForwarder/SendEvents')
           expect(r.tags.topic).to.equal('my-topic')
           expect(r.tags.reason).to.equal('Error: some error occurred')

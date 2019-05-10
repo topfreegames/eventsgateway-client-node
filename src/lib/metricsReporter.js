@@ -1,15 +1,12 @@
-const os = require('os')
 const metricsPrometheus = require('./metricsPrometheus')
 
 class MetricsReporter {
   constructor(config) {
-    this.hostname = os.hostname()
     this.prometheus = metricsPrometheus
   }
 
   reportResponseTime(method, topic, timeElapsed, err) {
     this.prometheus.clientRequestsResponseTime.labels(
-      this.hostname,
       method,
       topic
     ).observe(timeElapsed)
@@ -18,7 +15,6 @@ class MetricsReporter {
   reportFailure(method, topic, err) {
     const e = err.toString()
     this.prometheus.clientRequestsFailureCounter.labels(
-      this.hostname,
       method,
       topic,
       e
@@ -27,7 +23,6 @@ class MetricsReporter {
 
   reportSuccess(method, topic) {
     this.prometheus.clientRequestsSuccessCounter.labels(
-      this.hostname,
       method,
       topic
     ).inc()
@@ -35,7 +30,6 @@ class MetricsReporter {
 
   reportDropped(topic) {
     this.prometheus.clientRequestsDroppedCounter.labels(
-      this.hostname,
       topic
     ).inc()
   }
