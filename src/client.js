@@ -26,11 +26,6 @@ class Client {
     if (!topic) {
       throw Error('topic cannot be empty')
     }
-    // currently there are no interceptors in node-grpc
-    // the proposal was already accepted
-    // https://github.com/grpc/proposal/blob/master/L5-NODEJS-CLIENT-INTERCEPTORS.md
-    // but the PR is still ongoing
-    // https://github.com/grpc/grpc-node/pull/59
     const event = {
       id: uuid(),
       name,
