@@ -1,5 +1,8 @@
+[![Build Status](https://travis-ci.org/topfreegames/eventsgateway-client-node.svg?branch=master)](https://travis-ci.org/topfreegames/eventsgateway-client-node)
+
 # eventsgateway-client-node
 Node client for eventsgateway server.
+
 
 ### Install
 
