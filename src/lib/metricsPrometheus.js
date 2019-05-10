@@ -15,33 +15,39 @@ process.on('uncaughtException', err => (
 ))
 
 // Prometheus Metrics
-const clientRequestsResponseTime = new client.Summary({
+const clientRequestsResponseTime = new client.Histogram({
   name: 'eventsgateway_client_response_time_ms',
   help: 'the response time in ms of calls to server',
-  percentiles: [0.7, 0.95, 0.99],
-  labelNames: ['clientHost', 'route', 'topic'],
+  buckets: [1, 5, 10, 30, 90, 160, 240],
+  labelNames: ['route', 'topic'],
 })
 
 const clientRequestsSuccessCounter = new client.Counter({
   name: 'eventsgateway_client_requests_success_counter',
   help: 'the count of successfull client requests to the server',
-  labelNames: ['clientHost', 'route', 'topic'],
+  labelNames: ['route', 'topic'],
 })
 
 const clientRequestsFailureCounter = new client.Counter({
   name: 'eventsgateway_client_requests_failure_counter',
   help: 'the count of failed client requests to the server',
-  labelNames: ['clientHost', 'route', 'topic', 'reason'],
+  labelNames: ['route', 'topic', 'reason'],
+})
+
+const clientRequestsDroppedCounter = new client.Counter({
+  name: 'eventsgateway_client_requests_dropped_counter',
+  help: 'the count of dropped client requests to the server',
+  labelNames: ['topic'],
 })
 
 // Catch all uncaught errors
-app.use(function* validate(next) {
+app.use((ctx, next) => {
   try {
-    yield next
+    next()
   } catch (err) {
-    this.status = 500
+    ctx.status = 500
     logger.error({ err }, 'uncaught exception')
-    this.body = { error: err }
+    ctx.body = { error: err }
   }
 })
 
@@ -54,11 +60,11 @@ app.on('error', err => (
 
 
 logger.debug('finished configuring app...')
-router.get('/metrics', function* metrics(next) {
-  this.set('Content-Type', client.register.contentType)
-  this.body = client.register.metrics()
-  this.status = 200
-  yield next
+router.get('/metrics', (ctx, next) => {
+  ctx.set('Content-Type', client.register.contentType)
+  ctx.body = client.register.metrics()
+  ctx.status = 200
+  next()
 })
 
 module.exports = {
@@ -75,4 +81,5 @@ module.exports = {
   clientRequestsResponseTime,
   clientRequestsSuccessCounter,
   clientRequestsFailureCounter,
+  clientRequestsDroppedCounter,
 }

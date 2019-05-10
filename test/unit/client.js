@@ -1,5 +1,4 @@
 /* eslint-disable import/no-extraneous-dependencies */
-const os = require('os')
 const prometheusclient = require('prom-client')
 const sap = require('supertest-as-promised')
 const sinon = require('sinon')
@@ -10,25 +9,9 @@ const {
 } = require('mocha')
 require('co-mocha')
 
-const configDefault = require('./../../config/default.json')
-const configTest = require('./../../config/test.json')
-const Client = require('./../../client')
-
-const parsePrometheusResponse = (text) => {
-  const messages = text.split(/\r?\n/)
-  return messages.map((m) => {
-    if (m.startsWith('#') || m.length === 0) {
-      return null
-    }
-    const re = /(.*){(.*)}\s(\d)/
-    const matches = re.exec(m)
-    const tags = {}
-    matches[2].split(',').forEach((t) => {
-      tags[t.split('=')[0]] = JSON.parse(t.split('=')[1])
-    })
-    return { metric: matches[1], tags, val: parseInt(matches[3], 10) }
-  }).filter(m => !!m)
-}
+const helpers = require('./helpers')
+const configDefault = require('./../../src/config/default.json')
+const Client = require('./../../src/client')
 
 describe('Client', () => {
   describe('Constructor', () => {
@@ -36,28 +19,26 @@ describe('Client', () => {
       const client = new Client()
       expect(client.config).to.equal(configDefault)
       expect(client.topic).to.equal(configDefault.kafkatopic)
-      expect(client.hostname).to.equal(os.hostname())
-      expect(client.grpcClient).not.to.equal(undefined)
+      expect(client.producer).not.to.equal(undefined)
       expect(client.logger).not.to.equal(undefined)
-      expect(client.metrics).not.to.equal(undefined)
-      expect(client.metrics.prometheus).not.to.equal(undefined)
-      expect(client.metrics.statsd).not.to.equal(undefined)
+      expect(client.producer.metrics).not.to.equal(undefined)
+      expect(client.producer.metrics.prometheus).not.to.equal(undefined)
     })
 
     it('returns client with provided config and topic', () => {
+      const configTest = JSON.parse(JSON.stringify(configDefault))
+      configTest.kafkatopic = 'test-default-topic'
       const client = new Client(configTest, 'my-topic')
       expect(client.config).to.equal(configTest)
       expect(client.topic).to.equal('my-topic')
-      expect(client.hostname).to.equal(os.hostname())
-      expect(client.grpcClient).not.to.equal(undefined)
+      expect(client.producer).not.to.equal(undefined)
       expect(client.logger).not.to.equal(undefined)
-      expect(client.metrics).not.to.equal(undefined)
-      expect(client.metrics.prometheus).not.to.equal(undefined)
-      expect(client.metrics.statsd).not.to.equal(undefined)
+      expect(client.producer.metrics).not.to.equal(undefined)
+      expect(client.producer.metrics.prometheus).not.to.equal(undefined)
     })
 
     it('throws exception if no kafka topic', () => {
-      const config = JSON.parse(JSON.stringify(configTest))
+      const config = JSON.parse(JSON.stringify(configDefault))
       delete config.kafkatopic
 
       const getClient = () => new Client(config)
@@ -65,7 +46,7 @@ describe('Client', () => {
     })
 
     it('throws exception if no server address', () => {
-      const config = JSON.parse(JSON.stringify(configTest))
+      const config = JSON.parse(JSON.stringify(configDefault))
       delete config.grpc.serveraddress
 
       const getClient = () => new Client(config)
@@ -82,7 +63,7 @@ describe('Client', () => {
 
     beforeEach(() => {
       client = new Client()
-      sendEventStub = sinon.stub(client.grpcClient, 'sendEvent')
+      sendEventStub = sinon.stub(client.producer.grpcClient, 'sendEvent')
       name = 'EventName'
       props = {
         prop1: 'val1',
@@ -92,7 +73,7 @@ describe('Client', () => {
     })
 
     afterEach(() => {
-      client.grpcClient.sendEvent.restore()
+      client.producer.grpcClient.sendEvent.restore()
     })
 
     it('sends event to specific topic', function* () {
@@ -131,7 +112,7 @@ describe('Client', () => {
 
     beforeEach(() => {
       client = new Client()
-      sendEventStub = sinon.stub(client.grpcClient, 'sendEvent')
+      sendEventStub = sinon.stub(client.producer.grpcClient, 'sendEvent')
       name = 'EventName'
       props = {
         prop1: 'val1',
@@ -140,7 +121,7 @@ describe('Client', () => {
     })
 
     afterEach(() => {
-      client.grpcClient.sendEvent.restore()
+      client.producer.grpcClient.sendEvent.restore()
     })
 
     it('sends event to configured topic', function* () {
@@ -172,8 +153,6 @@ describe('Client', () => {
   })
 
   describe('Metrics', () => {
-    // TODO: test statsd metrics
-
     let client
     let sendEventStub
     let name
@@ -183,19 +162,19 @@ describe('Client', () => {
 
     beforeEach(() => {
       client = new Client(undefined, uuid())
-      sendEventStub = sinon.stub(client.grpcClient, 'sendEvent')
+      sendEventStub = sinon.stub(client.producer.grpcClient, 'sendEvent')
       name = 'EventName'
       props = {
         prop1: 'val1',
         prop2: 'val2',
       }
       prometheusclient.register.resetMetrics()
-      metricsServer = client.metrics.prometheus.listen()
+      metricsServer = client.producer.metrics.prometheus.listen()
       request = sap.agent(metricsServer)
     })
 
     afterEach(() => {
-      client.grpcClient.sendEvent.restore()
+      client.producer.grpcClient.sendEvent.restore()
       metricsServer.close()
     })
 
@@ -209,15 +188,14 @@ describe('Client', () => {
       expect(metricsRes.status).to.equal(200)
       expect(metricsRes.headers['content-type']).to.equal(prometheusclient.contentType)
       expect(metricsRes.text).not.to.have.length(0)
-      const parsedRes =
-        parsePrometheusResponse(metricsRes.text).filter(r => r.tags.topic === client.topic)
+      const parsedRes = helpers.parsePrometheusResponse(metricsRes.text)
+        .filter(r => r.tags.topic === client.topic)
       parsedRes.forEach((r) => {
-        expect(r.tags.clientHost).to.equal(os.hostname())
         expect(r.tags.route).to.equal('/eventsgateway.GRPCForwarder/SendEvent')
         expect(r.tags.topic).to.equal(client.topic)
       })
-      const resTime = parsedRes.filter(r => r.metric === 'eventsgateway_client_response_time_ms')
-      expect(resTime).to.have.length(3) // num percentiles
+      const resTime = parsedRes.filter(r => r.metric === 'eventsgateway_client_response_time_ms_bucket')
+      expect(resTime).to.have.length(8) // num buckets and +Inf
       const resSuccess = parsedRes.filter(r => r.metric ===
                                           'eventsgateway_client_requests_success_counter')
       expect(resSuccess).to.have.length(1) // num requests
@@ -240,12 +218,11 @@ describe('Client', () => {
         expect(metricsRes.status).to.equal(200)
         expect(metricsRes.headers['content-type']).to.equal(prometheusclient.contentType)
         expect(metricsRes.text).not.to.have.length(0)
-        const parsedRes =
-          parsePrometheusResponse(metricsRes.text).filter(r => r.tags.topic === client.topic)
-        const resTime = parsedRes.filter(r => r.metric === 'eventsgateway_client_response_time_ms')
-        expect(resTime).to.have.length(3) // num percentiles
+        const parsedRes = helpers.parsePrometheusResponse(metricsRes.text)
+          .filter(r => r.tags.topic === client.topic)
+        const resTime = parsedRes.filter(r => r.metric === 'eventsgateway_client_response_time_ms_bucket')
+        expect(resTime).to.have.length(8) // num buckets and +Inf
         parsedRes.forEach((r) => {
-          expect(r.tags.clientHost).to.equal(os.hostname())
           expect(r.tags.route).to.equal('/eventsgateway.GRPCForwarder/SendEvent')
           expect(r.tags.topic).to.equal(client.topic)
         })

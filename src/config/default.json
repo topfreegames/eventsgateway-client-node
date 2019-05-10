@@ -1,0 +1,14 @@
+{
+  "producer": {
+    "async": false,
+    "maxRetries": 3,
+    "retryIntervalMs": 1000,
+    "batchSize": 10,
+    "lingerIntervalMs": 500,
+    "waitIntervalMs": 1000
+  },
+  "grpc": {
+    "serveraddress": "localhost:9999"
+  },
+  "kafkatopic": "default-topic"
+}

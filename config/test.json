@@ -1,9 +1,0 @@
-{
-  "grpc": {
-    "serveraddress": "localhost:9999"
-  },
-  "kafkatopic": "test-default-topic",
-  "statsd": {
-    "mock": true
-  }
-}
