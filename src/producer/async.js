@@ -2,6 +2,7 @@ const grpc = require('grpc')
 const path = require('path')
 const uuid = require('uuid/v4')
 const MetricsReporter = require('./../lib/metricsReporter')
+const util = require('./../lib/util')
 const protoPath = path.resolve(__dirname, './protos/eventsgateway/grpc/protobuf/events.proto')
 const eventsProto = grpc.load(protoPath).eventsgateway
 
@@ -18,16 +19,11 @@ class Async {
     this.logger = logger.child({ address: this.address })
     this.metrics = new MetricsReporter(this.config)
     this.method = '/eventsgateway.GRPCForwarder/SendEvents'
-    this.lingerIntervalMs = this.config.producer.lingerIntervalMs === undefined ?
-      500 : this.config.producer.lingerIntervalMs
-    this.batchSize = this.config.producer.batchSize === undefined ?
-      10 : this.config.producer.batchSize
-    this.maxRetries = this.config.producer.maxRetries === undefined ?
-      3 : this.config.producer.maxRetries
-    this.retryIntervalMs = this.config.producer.retryIntervalMs === undefined ?
-      1000 : this.config.producer.retryIntervalMs
-    this.waitIntervalMs = this.config.producer.waitIntervalMs === undefined ?
-      1000 : this.config.producer.waitIntervalMs
+    this.lingerIntervalMs = util.getValue(this.config.producer, 'lingerIntervalMs', 500)
+    this.batchSize = util.getValue(this.config.producer, 'batchSize', 10)
+    this.maxRetries = util.getValue(this.config.producer, 'maxRetries', 3)
+    this.retryIntervalMs = util.getValue(this.config.producer, 'retryIntervalMs', 1000)
+    this.waitIntervalMs = util.getValue(this.config.producer, 'waitIntervalMs', 1000)
     this.batch = []
     this.currentSendEventsRef = null
     this.waitCount = 0

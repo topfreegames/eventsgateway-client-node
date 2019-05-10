@@ -12,7 +12,6 @@ require('co-mocha')
 
 const helpers = require('./helpers')
 const configDefault = require('./../../src/config/default.json')
-const configTest = require('./../../src/config/test.json')
 const Client = require('./../../src/client')
 
 describe('Client', () => {
@@ -29,6 +28,8 @@ describe('Client', () => {
     })
 
     it('returns client with provided config and topic', () => {
+      const configTest = JSON.parse(JSON.stringify(configDefault))
+      configTest.kafkatopic = 'test-default-topic'
       const client = new Client(configTest, 'my-topic')
       expect(client.config).to.equal(configTest)
       expect(client.topic).to.equal('my-topic')
@@ -40,7 +41,7 @@ describe('Client', () => {
     })
 
     it('throws exception if no kafka topic', () => {
-      const config = JSON.parse(JSON.stringify(configTest))
+      const config = JSON.parse(JSON.stringify(configDefault))
       delete config.kafkatopic
 
       const getClient = () => new Client(config)
@@ -48,7 +49,7 @@ describe('Client', () => {
     })
 
     it('throws exception if no server address', () => {
-      const config = JSON.parse(JSON.stringify(configTest))
+      const config = JSON.parse(JSON.stringify(configDefault))
       delete config.grpc.serveraddress
 
       const getClient = () => new Client(config)

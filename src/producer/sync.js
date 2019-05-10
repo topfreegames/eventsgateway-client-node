@@ -1,6 +1,7 @@
 const grpc = require('grpc')
 const path = require('path')
 const MetricsReporter = require('./../lib/metricsReporter')
+const util = require('./../lib/util')
 const protoPath = path.resolve(__dirname, './protos/eventsgateway/grpc/protobuf/events.proto')
 const eventsProto = grpc.load(protoPath).eventsgateway
 
@@ -17,8 +18,7 @@ class Sync {
     )
     this.metrics = new MetricsReporter(this.config)
     this.method = '/eventsgateway.GRPCForwarder/SendEvent'
-    this.waitIntervalMs = this.config.producer.waitIntervalMs === undefined ?
-      1000 : this.config.producer.waitIntervalMs
+    this.waitIntervalMs = util.getValue(this.config.producer, 'waitIntervalMs', 1000)
     this.waitCount = 0
   }
 
