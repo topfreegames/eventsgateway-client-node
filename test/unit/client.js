@@ -77,7 +77,7 @@ describe('Client', () => {
     })
 
     it('sends event to specific topic', function* () {
-      sendEventStub.callsArgWith(1, null, {})
+      sendEventStub.callsArgWith(2, null, {})
       const res = yield client.sendToTopic(name, topic, props)
       expect(Object.keys(res)).to.have.length(0)
       expect(sendEventStub.calledOnce).to.equal(true)
@@ -93,7 +93,7 @@ describe('Client', () => {
 
     it('throws exception if event rpc call failed', function* () {
       const error = new Error('some error occured')
-      sendEventStub.callsArgWith(1, error, null)
+      sendEventStub.callsArgWith(2, error, null)
       try {
         yield client.sendToTopic(name, topic, props)
         throw new Error('should not reach this line of code')
@@ -125,7 +125,7 @@ describe('Client', () => {
     })
 
     it('sends event to configured topic', function* () {
-      sendEventStub.callsArgWith(1, null, {})
+      sendEventStub.callsArgWith(2, null, {})
       const res = yield client.send(name, props)
       expect(Object.keys(res)).to.have.length(0)
       expect(sendEventStub.calledOnce).to.equal(true)
@@ -141,7 +141,7 @@ describe('Client', () => {
 
     it('throws exception if event rpc call failed', function* () {
       const error = new Error('some error occured')
-      sendEventStub.callsArgWith(1, error, null)
+      sendEventStub.callsArgWith(2, error, null)
       try {
         yield client.send(name, props)
         throw new Error('should not reach this line of code')
@@ -179,7 +179,7 @@ describe('Client', () => {
     })
 
     it('reports metrics in the /metrics endpoint - success', function* () {
-      sendEventStub.callsArgWith(1, null, {})
+      sendEventStub.callsArgWith(2, null, {})
       const res = yield client.send(name, props)
       expect(Object.keys(res)).to.have.length(0)
       expect(sendEventStub.calledOnce).to.equal(true)
@@ -206,7 +206,7 @@ describe('Client', () => {
 
     it('reports metrics in the /metrics endpoint - failure', function* () {
       const error = new Error('some error occured')
-      sendEventStub.callsArgWith(1, error, null)
+      sendEventStub.callsArgWith(2, error, null)
       try {
         yield client.send(name, props)
         throw new Error('should not reach this line of code')

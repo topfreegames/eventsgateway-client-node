@@ -4,26 +4,34 @@
 Node client for eventsgateway server.
 
 
-### Install
+## Install
 
 ```
 npm install eventsgateway-client-node
 ```
 
-Compatible with node 6+, uses generators instead of async/await for extended compatibility.
+Compatible with node 6+
 
-
-### Example Usage
+## Example Usage
 
 ```javascript
 const EventsGatewayClient = require('eventsgateway-client-node')
 
 // config containing grpc server address and kafka topic
 const config = {
-  "grpc": {
-    "serveraddress": "localhost:9999"
+  "producer": {
+    "async": true, // if you want to use the async or sync dispatch
+    "maxRetries": 3, // (async-only) how many times to retry a dispatch if it fails
+    "retryIntervalMs": 1000, // (async-only) first wait time before a retry, formula => 2^retryNumber * retryInterval
+    "batchSize": 10, // (async-only) maximum number of messages to send in a batch
+    "lingerIntervalMs": 500, (async-only) // how long to wait before sending messages, in the hopes of filling the batch
+    "waitIntervalMs": 1000 // polling interval to check whether all events were sent before shutting down
   },
-  "kafkatopic": "default-topic"
+  "grpc": {
+    "serveraddress": "localhost:9999",
+    "timeout": 500
+  },
+  "kafkatopic": "default-topic" // default topic to send messages
 }
 
 // initialize the client
@@ -32,7 +40,9 @@ const eventsgatewayclient = new EventsGatewayClient(config)
 // send event to configured topic
 // calls should be wrapped in a try/catch
 try {
-  yield this.app.eventsGatewayClient.send(
+  // no need to `await` async send, if you're using sync client, use `await`
+  // as well, and handle failures
+  this.app.eventsGatewayClient.send(
     'pingEvent',
     {
       status: `${123}`,     // all values must be sent as strings
@@ -45,9 +55,11 @@ try {
 
 // send event to custom topic
 try {
-  yield this.app.eventsGatewayClient.sendToTopic(
+  // no need to `await` async send, if you're using sync client, use `await`
+  // as well, and handle failures
+  this.app.eventsGatewayClient.sendToTopic(
     'pingEvent',
-	'my-topic'
+    'my-topic',
     {
       status: `${123}`,
       msg: 'my string msg',
@@ -56,27 +68,7 @@ try {
 } catch (err) {}
 ```
 
-### Metrics
-
-### Datadog StatsD
-
-```javascript
-// include statds information for sending metrics
-const config = {
-  "grpc": {
-    "serveraddress": "localhost:9999"
-  },
-  "kafkatopic": "default-topic",
-  "statsd": {
-    "host": "127.0.0.1",
-    "port": 8125,
-    "globalTags": ['game:my-game', `host:127.0.0.1`],
-  }
-}
-
-```
-
-Response time metrics including error codes will be sent to the given host and port.
+## Metrics
 
 ### Prometheus
 

@@ -8,7 +8,8 @@
     "waitIntervalMs": 1000
   },
   "grpc": {
-    "serveraddress": "localhost:9999"
+    "serveraddress": "localhost:9999",
+    "timeout": 500
   },
   "kafkatopic": "default-topic"
 }

@@ -28,6 +28,7 @@ class Async {
     this.currentSendEventsRef = null
     const waitIntervalMs = util.getValue(this.config.producer, 'waitIntervalMs', 1000)
     this.wg = new WaitGroup(this.logger, waitIntervalMs)
+    this.timeout = parseInt(util.getValue(this.config.grpc, 'timeout', 500))
   }
 
   send (event) {
@@ -76,7 +77,7 @@ class Async {
       return
     }
     const startTime = Date.now()
-    this.grpcClient.sendEvents(req, (err, res) => {
+    this.grpcClient.sendEvents(req, { deadline: util.getDeadline(this.timeout) }, (err, res) => {
       const timeElapsed = Date.now() - startTime
       req.events.forEach(event => {
         this.metrics.reportResponseTime(this.method, event.topic, timeElapsed, err)

@@ -22,6 +22,7 @@ class Sync {
     this.waitIntervalMs = util.getValue(this.config.producer, 'waitIntervalMs', 1000)
     const waitIntervalMs = util.getValue(this.config.producer, 'waitIntervalMs', 1000)
     this.wg = new WaitGroup(this.logger, waitIntervalMs)
+    this.timeout = parseInt(util.getValue(this.config.grpc, 'timeout', 500))
   }
 
   send (event, logger) {
@@ -29,7 +30,7 @@ class Sync {
     const startTime = Date.now()
     const l = logger.child({ address: this.address, method: this.method })
     return new Promise((resolve, reject) => {
-      this.grpcClient.sendEvent(event, (err, res) => {
+      this.grpcClient.sendEvent(event, { deadline: util.getDeadline(this.timeout) }, (err, res) => {
         const timeElapsed = Date.now() - startTime
         this.metrics.reportResponseTime(this.method, event.topic, timeElapsed, err)
         l.child({ timeElapsed, reply: res }).debug('request processed')

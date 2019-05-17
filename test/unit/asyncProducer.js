@@ -81,7 +81,7 @@ describe('Async Producer', () => {
     })
 
     it('sends event to specific topic', function* () {
-      sendEventsStub.callsArgWith(1, null, {})
+      sendEventsStub.callsArgWith(2, null, {})
       client.sendToTopic(name, topic, props)
       expect(sendEventsStub.calledOnce).to.equal(true)
       const req = sendEventsStub.getCall(0).args[0]
@@ -102,7 +102,7 @@ describe('Async Producer', () => {
 
     it('failures are reported', function* () {
       const error = new Error('some error occurred')
-      sendEventsStub.callsArgWith(1, error, null)
+      sendEventsStub.callsArgWith(2, error, null)
       client.sendToTopic(name, topic, props)
       expect(sendEventsStub.calledOnce).to.equal(true)
       const metricsRes = yield request.get('/metrics')
@@ -139,8 +139,8 @@ describe('Async Producer', () => {
         configTest.producer.maxRetries = 1
         rebuildClient(configTest)
         const error = new Error('some error occurred')
-        sendEventsStub.onCall(0).callsArgWith(1, error, null)
-        sendEventsStub.onCall(1).callsArgWith(1, null, {})
+        sendEventsStub.onCall(0).callsArgWith(2, error, null)
+        sendEventsStub.onCall(1).callsArgWith(2, null, {})
         client.sendToTopic(name, topic, props)
         await helpers.sleep(5)
         expect(sendEventsStub.callCount).to.equal(2)
@@ -152,18 +152,18 @@ describe('Async Producer', () => {
         configTest.producer.batchSize = 2
         configTest.producer.maxRetries = 1
         rebuildClient(configTest)
-        sendEventsStub.onCall(0).callsArgWith(1, null, { failureIndexes: [1] })
-        sendEventsStub.onCall(1).callsArgWith(1, null, { failureIndexes: [] })
+        sendEventsStub.onCall(0).callsArgWith(2, null, { failureIndexes: [1] })
+        sendEventsStub.onCall(1).callsArgWith(2, null, { failureIndexes: [] })
         client.sendToTopic('event-0', topic, props)
         client.sendToTopic('event-1', topic, props)
         await helpers.sleep(5)
         expect(sendEventsStub.callCount).to.equal(2)
-        expect(sendEventsStub.getCall(0).args.length).to.equal(2)
+        expect(sendEventsStub.getCall(0).args.length).to.equal(3)
         expect(sendEventsStub.getCall(0).args[0].events).to.be.instanceof(Array)
         expect(sendEventsStub.getCall(0).args[0].events.length).to.be.equal(2)
         expect(sendEventsStub.getCall(0).args[0].events[0].name).to.be.equal('event-0')
         expect(sendEventsStub.getCall(0).args[0].events[1].name).to.be.equal('event-1')
-        expect(sendEventsStub.getCall(1).args.length).to.equal(2)
+        expect(sendEventsStub.getCall(1).args.length).to.equal(3)
         expect(sendEventsStub.getCall(1).args[0].events).to.be.instanceof(Array)
         expect(sendEventsStub.getCall(1).args[0].events.length).to.be.equal(1)
         expect(sendEventsStub.getCall(1).args[0].events[0].name).to.be.equal('event-1')
@@ -175,18 +175,18 @@ describe('Async Producer', () => {
         configTest.producer.batchSize = 2
         configTest.producer.maxRetries = 1
         rebuildClient(configTest)
-        sendEventsStub.onCall(0).callsArgWith(1, null, { failureIndexes: [1] })
-        sendEventsStub.onCall(1).callsArgWith(1, null, { failureIndexes: [0] })
+        sendEventsStub.onCall(0).callsArgWith(2, null, { failureIndexes: [1] })
+        sendEventsStub.onCall(1).callsArgWith(2, null, { failureIndexes: [0] })
         client.sendToTopic('event-0', topic, props)
         client.sendToTopic('event-1', topic, props)
         await helpers.sleep(5)
         expect(sendEventsStub.callCount).to.equal(2)
-        expect(sendEventsStub.getCall(0).args.length).to.equal(2)
+        expect(sendEventsStub.getCall(0).args.length).to.equal(3)
         expect(sendEventsStub.getCall(0).args[0].events).to.be.instanceof(Array)
         expect(sendEventsStub.getCall(0).args[0].events.length).to.be.equal(2)
         expect(sendEventsStub.getCall(0).args[0].events[0].name).to.be.equal('event-0')
         expect(sendEventsStub.getCall(0).args[0].events[1].name).to.be.equal('event-1')
-        expect(sendEventsStub.getCall(1).args.length).to.equal(2)
+        expect(sendEventsStub.getCall(1).args.length).to.equal(3)
         expect(sendEventsStub.getCall(1).args[0].events).to.be.instanceof(Array)
         expect(sendEventsStub.getCall(1).args[0].events.length).to.be.equal(1)
         expect(sendEventsStub.getCall(1).args[0].events[0].name).to.be.equal('event-1')
@@ -199,12 +199,12 @@ describe('Async Producer', () => {
         configTest.producer.batchSize = 2
         configTest.producer.lingerIntervalMs = 5
         rebuildClient(configTest)
-        sendEventsStub.onCall(0).callsArgWith(1, null, {})
+        sendEventsStub.onCall(0).callsArgWith(2, null, {})
         client.sendToTopic(name, topic, props)
         expect(sendEventsStub.callCount).to.equal(0)
         await helpers.sleep(10)
         expect(sendEventsStub.callCount).to.equal(1)
-        expect(sendEventsStub.getCall(0).args.length).to.equal(2)
+        expect(sendEventsStub.getCall(0).args.length).to.equal(3)
         expect(sendEventsStub.getCall(0).args[0].events).to.be.instanceof(Array)
         expect(sendEventsStub.getCall(0).args[0].events.length).to.be.equal(1)
         expect(sendEventsStub.getCall(0).args[0].events[0].name).to.be.equal(name)
@@ -218,7 +218,7 @@ describe('Async Producer', () => {
         configTest.producer.lingerIntervalMs = 10
         configTest.producer.waitIntervalMs = 6
         rebuildClient(configTest)
-        sendEventsStub.onCall(0).callsArgWith(1, null, {})
+        sendEventsStub.onCall(0).callsArgWith(2, null, {})
         gracefulStopStub = sinon.stub(client.producer.wg, 'wait')
         gracefulStopStub.callThrough()
         client.sendToTopic(name, topic, props)
