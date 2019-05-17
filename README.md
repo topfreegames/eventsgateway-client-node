@@ -24,7 +24,7 @@ const config = {
     "maxRetries": 3, // (async-only) how many times to retry a dispatch if it fails
     "retryIntervalMs": 1000, // (async-only) first wait time before a retry, formula => 2^retryNumber * retryInterval
     "batchSize": 10, // (async-only) maximum number of messages to send in a batch
-    "lingerIntervalMs": 500, (async-only) // how long to wait before sending messages, in the hopes of filling the batch
+    "lingerIntervalMs": 500, // (async-only) // how long to wait before sending messages, in the hopes of filling the batch
     "waitIntervalMs": 1000 // polling interval to check whether all events were sent before shutting down
   },
   "grpc": {
