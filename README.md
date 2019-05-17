@@ -40,15 +40,10 @@ const eventsgatewayclient = new EventsGatewayClient(config)
 // send event to configured topic
 // calls should be wrapped in a try/catch
 try {
-  // no need to `await` async send, if you're using sync client, use `await`
-  // as well, and handle failures
-  this.app.eventsGatewayClient.send(
-    'pingEvent',
-    {
-      status: `${123}`,     // all values must be sent as strings
-      msg: 'my string msg',
-    }
-  )
+  // async client, no need to await
+  this.app.eventsGatewayClient.send('pingEvent', { some: 'value' })
+  // sync client, block if you want to handle errors
+  await this.app.eventsGatewayClient.send('pingEvent', { some: 'value' })
 } catch (err) {
   // no need to log here, eventsGateway already logs failures
 }
@@ -57,14 +52,10 @@ try {
 try {
   // no need to `await` async send, if you're using sync client, use `await`
   // as well, and handle failures
-  this.app.eventsGatewayClient.sendToTopic(
-    'pingEvent',
-    'my-topic',
-    {
-      status: `${123}`,
-      msg: 'my string msg',
-    }
-  )
+  // async client, no need to await
+  this.app.eventsGatewayClient.sendToTopic('pingEvent', 'my-topic', { some: 'value' })
+  // sync client, block if you want to handle errors
+  await this.app.eventsGatewayClient.sendToTopic('pingEvent', 'my-topic', { some: 'value' })
 } catch (err) {}
 ```
 
