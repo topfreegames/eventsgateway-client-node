@@ -1,4 +1,3 @@
-require('babel-polyfill')
 const uuid = require('uuid/v4')
 const defaultConfig = require('./config/default.json')
 const logger = require('./lib/logger')

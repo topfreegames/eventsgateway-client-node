@@ -1,6 +1,6 @@
 {
   "name": "eventsgateway-client-node",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Node client for eventsgateway server.",
   "main": "lib/client.js",
   "module": "es/client.js",
@@ -34,7 +34,6 @@
     }
   ],
   "dependencies": {
-    "babel-polyfill": "^6.26.0",
     "bunyan": "^1.8.12",
     "grpc": "^1.20.3",
     "koa": "^2.7.0",
