@@ -1,4 +1,6 @@
 const uuid = require('uuid/v4')
+require("core-js/stable");
+require("regenerator-runtime/runtime");
 const defaultConfig = require('./config/default.json')
 const logger = require('./lib/logger')
 const producer = require('./producer')
