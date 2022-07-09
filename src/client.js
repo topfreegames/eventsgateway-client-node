@@ -1,4 +1,4 @@
-const uuid = require('uuid/v4')
+const { v4: uuidv4 } = require('uuid');
 require("core-js/stable");
 require("regenerator-runtime/runtime");
 const defaultConfig = require('./config/default.json')
@@ -28,7 +28,7 @@ class Client {
       throw Error('topic cannot be empty')
     }
     const event = {
-      id: uuid(),
+      id: uuidv4(),
       name,
       topic,
       props,

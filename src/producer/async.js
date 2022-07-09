@@ -1,11 +1,13 @@
-const grpc = require('grpc')
+const grpc = require('@grpc/grpc-js');
+const protoLoader = require('@grpc/proto-loader');
 const path = require('path')
-const uuid = require('uuid/v4')
+const { v4: uuidv4 } = require('uuid');
 const WaitGroup = require('./waitGroup')
 const MetricsReporter = require('./../lib/metricsReporter')
 const util = require('./../lib/util')
 const protoPath = path.resolve(__dirname, './protos/eventsgateway/grpc/protobuf/events.proto')
-const eventsProto = grpc.load(protoPath).eventsgateway
+const packageDefinition = protoLoader.loadSync(protoPath);
+const eventsProto = grpc.loadPackageDefinition(packageDefinition).eventsgateway;
 
 class Async {
   constructor(config, logger) {
@@ -50,7 +52,7 @@ class Async {
     const events = this.batch
     this.batch = []
     const req = {
-      id: uuid(),
+      id: uuidv4(),
       retry: 0,
       events
     }
