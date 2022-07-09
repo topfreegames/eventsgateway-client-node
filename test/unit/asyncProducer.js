@@ -2,12 +2,11 @@
 const prometheusclient = require('prom-client')
 const sap = require('supertest-as-promised')
 const sinon = require('sinon')
-const uuid = require('uuid/v4')
+const { v4: uuidv4 } = require('uuid');
 const { expect } = require('chai')
 const {
   afterEach, beforeEach, describe, it,
 } = require('mocha')
-require('co-mocha')
 
 const helpers = require('./helpers')
 const producer = require('./../../src/producer')

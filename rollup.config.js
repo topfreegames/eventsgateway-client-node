@@ -1,11 +1,9 @@
 // rollup.config.js
-import babel from 'rollup-plugin-babel'
-import commonjs from 'rollup-plugin-commonjs'
+import babel from '@rollup/plugin-babel'
+import commonjs from '@rollup/plugin-commonjs'
 import copy from 'rollup-plugin-copy'
-import json from 'rollup-plugin-json'
-import replace from 'rollup-plugin-replace'
-import resolve from 'rollup-plugin-node-resolve'
-import { terser } from 'rollup-plugin-terser'
+import json from '@rollup/plugin-json'
+import resolve from '@rollup/plugin-node-resolve'
 import pkg from './package.json'
 
 export default [
@@ -28,8 +26,7 @@ export default [
         exclude: 'node_modules/**' // only transpile our source code
       }),
       copy({
-        targets: ['src/producer/protos'],
-        outputFolder: 'lib'
+        targets: [{src: 'src/producer/protos', dest: 'lib'}]
       })
     ]
   },
@@ -52,8 +49,7 @@ export default [
         exclude: 'node_modules/**' // only transpile our source code
       }),
       copy({
-        targets: ['src/producer/protos'],
-        outputFolder: 'es'
+        targets: [{src: 'src/producer/protos', dest: 'es'}]
       })
     ]
   },
